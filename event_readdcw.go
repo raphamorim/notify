@@ -57,7 +57,7 @@ const syscallFileNotifyChangeSecurity = 0x00000100
 // The following events are returned on the channel passed to Watch, but cannot
 // be passed to Watch itself (see filters above). You can find a table showing
 // the relation between actions and filteres at
-// https://github.com/rjeczalik/notify/issues/10#issuecomment-66179535
+// https://github.com/raphamorim/notify/issues/10#issuecomment-66179535
 // The msdn documentation on actions is part of
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa364391(v=vs.85).aspx
 const (

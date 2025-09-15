@@ -1,4 +1,4 @@
-notify [![GoDoc](https://godoc.org/github.com/rjeczalik/notify?status.svg)](https://godoc.org/github.com/rjeczalik/notify) [![Build Status](https://img.shields.io/travis/rjeczalik/notify/master.svg)](https://travis-ci.org/rjeczalik/notify "inotify + FSEvents + kqueue") [![Build status](https://img.shields.io/appveyor/ci/rjeczalik/notify-246.svg)](https://ci.appveyor.com/project/rjeczalik/notify-246 "ReadDirectoryChangesW") [![Coverage Status](https://img.shields.io/coveralls/rjeczalik/notify/master.svg)](https://coveralls.io/r/rjeczalik/notify?branch=master)
+notify [![GoDoc](https://godoc.org/github.com/raphamorim/notify?status.svg)](https://godoc.org/github.com/raphamorim/notify)
 ======
 
 Filesystem event notification library on steroids.
@@ -14,12 +14,12 @@ Filesystem event notification library on steroids.
 
 ## Documentation
 
-[godoc.org/github.com/rjeczalik/notify](https://godoc.org/github.com/rjeczalik/notify)
+[godoc.org/github.com/raphamorim/notify](https://godoc.org/github.com/raphamorim/notify)
 
 ## Installation
 
 ```bash
-go get -u github.com/rjeczalik/notify
+go get -u github.com/raphamorim/notify
 ```
 
 ## Quick Start
@@ -29,7 +29,7 @@ package main
 
 import (
     "log"
-    "github.com/rjeczalik/notify"
+    "github.com/raphamorim/notify"
 )
 
 func main() {
@@ -171,7 +171,7 @@ Thumbs.db
 
 ## Projects using notify
 
-- [github.com/rjeczalik/cmd/notify](https://godoc.org/github.com/rjeczalik/cmd/notify)
+- [github.com/raphamorim/cmd/notify](https://godoc.org/github.com/raphamorim/cmd/notify)
 - [github.com/cortesi/devd](https://github.com/cortesi/devd)
 - [github.com/cortesi/modd](https://github.com/cortesi/modd)
 - [github.com/syncthing/syncthing](https://github.com/syncthing/syncthing)
