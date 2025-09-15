@@ -85,6 +85,10 @@ Traverse:
 		for _, fi := range fi {
 			if fi.Type()&(fs.ModeSymlink|fs.ModeDir) == fs.ModeDir {
 				name := filepath.Join(nd.Name, fi.Name())
+				// Check if this directory should be ignored
+				if defaultIgnore != nil && defaultIgnore.ShouldIgnore(name) {
+					continue
+				}
 				stack = append(stack, nd.addchild(name, name[len(nd.Name)+1:]))
 			}
 		}

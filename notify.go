@@ -19,7 +19,15 @@
 
 package notify
 
-var defaultTree = newTree()
+import (
+	"os"
+	"path/filepath"
+)
+
+var (
+	defaultTree   = newTree()
+	defaultIgnore *IgnoreMatcher
+)
 
 // Watch sets up a watchpoint on path listening for events given by the events
 // argument.
@@ -71,4 +79,46 @@ func Watch(path string, c chan<- EventInfo, events ...Event) error {
 // receive no more signals.
 func Stop(c chan<- EventInfo) {
 	defaultTree.Stop(c)
+}
+
+// SetIgnoreMatcher sets the global ignore matcher for filtering paths.
+// If nil is passed, no paths will be ignored.
+func SetIgnoreMatcher(im *IgnoreMatcher) {
+	defaultIgnore = im
+}
+
+// SetIgnorePatterns sets ignore patterns from a list of gitignore-style patterns.
+// This creates a new IgnoreMatcher with the current working directory as root.
+func SetIgnorePatterns(patterns []string) error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	
+	im := NewIgnoreMatcher(cwd)
+	for _, pattern := range patterns {
+		im.AddPattern(pattern)
+	}
+	
+	defaultIgnore = im
+	return nil
+}
+
+// LoadIgnoreFile loads ignore patterns from a file (e.g., .gitignore or .notifyignore).
+// This creates a new IgnoreMatcher with the file's directory as root.
+func LoadIgnoreFile(path string) error {
+	dir := filepath.Dir(path)
+	im := NewIgnoreMatcher(dir)
+	
+	if err := im.LoadIgnoreFile(path); err != nil {
+		return err
+	}
+	
+	defaultIgnore = im
+	return nil
+}
+
+// EnableDefaultIgnorePatterns enables a set of common ignore patterns.
+func EnableDefaultIgnorePatterns() error {
+	return SetIgnorePatterns(DefaultIgnorePatterns())
 }

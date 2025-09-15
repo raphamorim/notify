@@ -124,6 +124,10 @@ func newRecursiveTree(w recursiveWatcher, c chan EventInfo) *recursiveTree {
 func (t *recursiveTree) dispatch() {
 	for ei := range t.c {
 		dbgprintf("dispatching %v on %q", ei.Event(), ei.Path())
+		// Check if this path should be ignored
+		if defaultIgnore != nil && defaultIgnore.ShouldIgnore(ei.Path()) {
+			continue
+		}
 		go func(ei EventInfo) {
 			nd, ok := node{}, false
 			dir, base := split(ei.Path())
