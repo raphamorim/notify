@@ -86,41 +86,41 @@ func (im *IgnoreMatcher) ShouldIgnore(path string) bool {
 		relPath = path
 	}
 
-	// Normalize path separators
+	// Normalize path separators and trim leading ./
 	relPath = filepath.ToSlash(relPath)
+	relPath = strings.TrimPrefix(relPath, "./")
 
-	info, err := os.Stat(path)
-	isDir := err == nil && info.IsDir()
+	// Determine if path is a directory syntactically to avoid FS stat flakiness
+	isDir := strings.HasSuffix(relPath, "/")
+	if !isDir {
+		if fi, err := os.Stat(path); err == nil && fi.IsDir() {
+			isDir = true
+		}
+	}
 
 	ignored := false
 	for _, p := range im.patterns {
-		// For directory patterns, check if path is or is under that directory
+		pat := strings.TrimPrefix(p.pattern, "./")
+
+		// Directory patterns should match the dir itself or anything under it
 		if p.isDir {
-			if isDir && im.matchPattern(p.pattern, relPath) {
+			// Exact dir match
+			if im.matchPattern(pat, relPath) || strings.HasPrefix(relPath+"/", pat+"/") {
 				if p.isNegate {
 					ignored = false
 				} else {
 					ignored = true
 				}
-			} else if !isDir {
-				// Check if file is under a directory that should be ignored
-				dir := filepath.ToSlash(filepath.Dir(relPath))
-				if im.matchPattern(p.pattern, dir) || strings.HasPrefix(relPath, p.pattern+"/") {
-					if p.isNegate {
-						ignored = false
-					} else {
-						ignored = true
-					}
-				}
+				continue
 			}
-		} else {
-			// Regular pattern matching
-			if im.matchPattern(p.pattern, relPath) {
-				if p.isNegate {
-					ignored = false
-				} else {
-					ignored = true
-				}
+		}
+
+		// Regular pattern matching (files or generic globs)
+		if im.matchPattern(pat, relPath) {
+			if p.isNegate {
+				ignored = false
+			} else {
+				ignored = true
 			}
 		}
 	}
@@ -183,40 +183,56 @@ func (im *IgnoreMatcher) matchGlob(pattern, path string) bool {
 
 // matchDoublestar handles ** patterns
 func (im *IgnoreMatcher) matchDoublestar(pattern, path string) bool {
-	parts := strings.Split(pattern, "**")
-	if len(parts) != 2 {
-		// Multiple ** not supported, fall back to simple match
-		return false
-	}
+	// Normalize
+	pattern = filepath.ToSlash(pattern)
+	path = filepath.ToSlash(path)
 
-	prefix := strings.TrimSuffix(parts[0], "/")
-	suffix := strings.TrimPrefix(parts[1], "/")
-
-	// Check if path starts with prefix
-	if prefix != "" && !strings.HasPrefix(path, prefix) {
-		return false
-	}
-
-	// Check if path ends with suffix
-	if suffix != "" {
-		// Find suffix in path after prefix
-		remaining := strings.TrimPrefix(path, prefix)
-		remaining = strings.TrimPrefix(remaining, "/")
-		
-		// Check all possible positions for suffix
-		pathParts := strings.Split(remaining, "/")
-		for i := 0; i <= len(pathParts); i++ {
-			subPath := strings.Join(pathParts[i:], "/")
-			if matched, _ := filepath.Match(suffix, subPath); matched {
-				return true
-			}
-		}
-	} else {
-		// No suffix, just check prefix
+	// Edge case: pattern is just **
+	if strings.Trim(pattern, "/") == "**" {
 		return true
 	}
 
-	return false
+	// Split pattern by ** and ensure order
+	parts := strings.Split(pattern, "**")
+	// Allow multiple ** by scanning sequentially
+	cur := path
+	leading := strings.TrimSuffix(parts[0], "/")
+	if leading != "" {
+		if !strings.HasPrefix(cur, strings.TrimPrefix(leading, "/")) {
+			return false
+		}
+		cur = strings.TrimPrefix(cur, strings.TrimPrefix(leading, "/"))
+		cur = strings.TrimPrefix(cur, "/")
+	}
+	// For each remaining segment after **, ensure it appears in order
+	for i := 1; i < len(parts); i++ {
+		seg := strings.Trim(parts[i], "/")
+		if seg == "" {
+			continue
+		}
+		// Find seg anywhere in cur boundaries
+		idx := indexGlob(cur, seg)
+		if idx == -1 {
+			return false
+		}
+		cur = cur[idx+len(seg):]
+	}
+	return true
+}
+
+// indexGlob finds the first index where glob seg matches in s (prefix match)
+func indexGlob(s, seg string) int {
+	// Fast path: literal substring
+	if !strings.ContainsAny(seg, "*?[") {
+		return strings.Index(s, seg)
+	}
+	// Try all cut points
+	for i := 0; i <= len(s); i++ {
+		if ok, _ := filepath.Match(seg, s[i:]); ok {
+			return i
+		}
+	}
+	return -1
 }
 
 // DefaultIgnorePatterns returns common patterns that should be ignored by default
