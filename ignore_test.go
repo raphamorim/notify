@@ -5,7 +5,6 @@
 package notify
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -14,7 +13,7 @@ import (
 
 func TestIgnoreMatcher(t *testing.T) {
 	// Create a temporary directory for testing
-	tmpDir, err := ioutil.TempDir("", "notify-ignore-test")
+	tmpDir, err := os.MkdirTemp("", "notify-ignore-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +74,7 @@ func TestIgnoreMatcher(t *testing.T) {
 
 func TestIgnoreWithWatch(t *testing.T) {
 	// Create a temporary directory for testing
-	tmpDir, err := ioutil.TempDir("", "notify-watch-ignore-test")
+	tmpDir, err := os.MkdirTemp("", "notify-watch-ignore-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,7 +140,7 @@ create_files:
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := ioutil.WriteFile(fullPath, []byte("test"), 0644); err != nil {
+		if err := os.WriteFile(fullPath, []byte("test"), 0644); err != nil {
 			t.Fatal(err)
 		}
 		// Small delay between file creations to ensure events are generated
@@ -204,7 +203,7 @@ create_files:
 
 func TestLoadIgnoreFile(t *testing.T) {
 	// Create a temporary directory
-	tmpDir, err := ioutil.TempDir("", "notify-ignorefile-test")
+	tmpDir, err := os.MkdirTemp("", "notify-ignorefile-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -219,7 +218,7 @@ build/
 node_modules/
 `
 	ignoreFile := filepath.Join(tmpDir, ".notifyignore")
-	if err := ioutil.WriteFile(ignoreFile, []byte(ignoreContent), 0644); err != nil {
+	if err := os.WriteFile(ignoreFile, []byte(ignoreContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -252,7 +251,7 @@ node_modules/
 }
 
 func TestDoublestarPatterns(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "notify-doublestar-test")
+	tmpDir, err := os.MkdirTemp("", "notify-doublestar-test")
 	if err != nil {
 		t.Fatal(err)
 	}
